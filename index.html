@@ -752,7 +752,7 @@ function init(){
   const d = new Date();
   document.getElementById('top-date').textContent = DAYS[d.getDay()]+', '+MONTHS[d.getMonth()]+' '+d.getDate()+' '+d.getFullYear();
   const h = d.getHours();
-  const greet = h<12?'Good morning':'h<17?'+'Good afternoon':'Good evening';
+  const greet = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
   document.getElementById('greeting').textContent = state.name ? greet+', '+state.name : greet;
   updateApiStatus();
   if(!state.apiKey){ showRaw('setup'); return; }
