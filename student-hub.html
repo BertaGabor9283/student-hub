@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Hub — AI Command Centre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e10;
+    --bg2: #16161a;
+    --bg3: #1e1e24;
+    --bg4: #26262e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #f0eee8;
+    --muted: #8a8895;
+    --hint: #52505e;
+    --accent: #7c6af7;
+    --accent2: #5dd4a8;
+    --accent3: #f0a05a;
+    --accent4: #e86868;
+    --accent5: #6ab8f7;
+    --r: 12px;
+    --r-sm: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* LAYOUT */
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    transition: transform .25s ease;
+  }
+  .sidebar-logo {
+    padding: 22px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.02em;
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+  .nav { padding: 12px 10px; flex: 1; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all .15s;
+    margin-bottom: 2px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--bg4); color: var(--text); }
+  .nav-icon { width: 18px; height: 18px; opacity: .7; font-size: 15px; }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .sidebar-footer {
+    padding: 14px 10px;
+    border-top: 1px solid var(--border);
+  }
+  .api-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg3);
+    border-radius: var(--r-sm);
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .api-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent4); flex-shrink: 0; }
+  .api-dot.ok { background: var(--accent2); }
+  .main { margin-left: 220px; flex: 1; min-width: 0; }
+  .topbar {
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar-title { font-size: 16px; font-weight: 600; letter-spacing: -.02em; }
+  .topbar-date { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .content { padding: 28px 32px; max-width: 900px; }
+
+  /* SETUP SCREEN */
+  .setup-screen {
+    max-width: 480px;
+    margin: 60px auto;
+    padding: 0 24px;
+  }
+  .setup-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--r);
+    padding: 32px;
+  }
+  .setup-title { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+  .setup-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+  .form-field { margin-bottom: 16px; }
+  .form-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block; font-weight: 500; }
+  .form-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--hint); }
+  .btn-primary {
+    width: 100%;
+    padding: 11px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn-primary:hover { opacity: .85; }
+  .setup-hint { font-size: 11px; color: var(--hint); margin-top: 12px; text-align: center; }
+  .setup-hint a { color: var(--accent5); text-decoration: none; }
+
+  /* METRIC CARDS */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .metric {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px;
+  }
+  .metric-val { font-size: 26px; font-weight: 600; letter-spacing: -.04em; }
+  .metric-lbl { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .metric-delta { font-size: 11px; margin-top: 6px; font-family: 'DM Mono', monospace; }
+  .up { color: var(--accent2); } .down { color: var(--accent4); } .neu { color: var(--muted); }
+
+  /* BARS */
+  .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .bar-label { font-size: 12px; color: var(--muted); width: 70px; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 5px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+  .bar-val { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; min-width: 60px; text-align: right; }
+
+  /* SECTION BLOCKS */
+  .section-head { font-size: 11px; font-weight: 600; letter-spacing: .08em; color: var(--hint); text-transform: uppercase; margin: 24px 0 12px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .card:hover { background: var(--bg3); border-color: var(--border2); }
+  .card-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    letter-spacing: .03em;
+  }
+  .card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .card-desc { font-size: 12px; color: var(--muted); line-height: 1.55; }
+  .card-cta { font-size: 11px; margin-top: 10px; font-weight: 500; }
+
+  /* CHAT PANEL */
+  .chat-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    display: flex;
+    flex-direction: column;
+    height: 520px;
+    margin-bottom: 24px;
+  }
+  .chat-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .chat-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+  .msg { display: flex; gap: 10px; max-width: 85%; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+  .msg.claude .msg-bubble { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 3px; }
+  .msg.user .msg-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 3px; }
+  .msg-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; flex-shrink: 0; margin-top: 2px;
+  }
+  .msg.claude .msg-avatar { background: var(--bg4); color: var(--accent); }
+  .msg.user .msg-avatar { background: var(--accent); color: #fff; }
+  .typing { display: flex; gap: 4px; padding: 10px 14px; }
+  .typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: pulse 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: .2s; }
+  .typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes pulse { 0%,60%,100%{opacity:.3} 30%{opacity:1} }
+  .chat-input-row {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .chat-textarea {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    resize: none;
+    outline: none;
+    min-height: 40px;
+    max-height: 120px;
+    line-height: 1.5;
+    transition: border-color .15s;
+  }
+  .chat-textarea:focus { border-color: var(--accent); }
+  .chat-textarea::placeholder { color: var(--hint); }
+  .chat-send {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--r-sm);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: opacity .15s;
+  }
+  .chat-send:hover { opacity: .8; }
+  .chat-send:disabled { opacity: .4; cursor: default; }
+
+  /* QUICK PROMPTS */
+  .quick-prompts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .qp {
+    font-size: 11px;
+    padding: 5px 11px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+    font-weight: 500;
+  }
+  .qp:hover { background: var(--bg4); color: var(--text); border-color: var(--accent); }
+
+  /* TIMELINE */
+  .timeline { padding-left: 16px; border-left: 1.5px solid var(--border2); }
+  .tl-item { position: relative; padding-bottom: 18px; padding-left: 18px; }
+  .tl-dot {
+    position: absolute; left: -21px; top: 4px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--hint); border: 2px solid var(--bg);
+  }
+  .tl-dot.done { background: var(--accent2); }
+  .tl-dot.now { background: var(--accent); box-shadow: 0 0 0 3px rgba(124,106,247,.2); }
+  .tl-dot.soon { background: var(--accent3); }
+  .tl-time { font-size: 10px; color: var(--hint); font-family: 'DM Mono', monospace; margin-bottom: 2px; }
+  .tl-name { font-size: 13px; font-weight: 500; }
+  .tl-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* HABIT TRACKER */
+  .habit-grid { display: flex; flex-direction: column; gap: 8px; }
+  .habit-row {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .habit-check {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 1.5px solid var(--border2);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all .15s;
+    flex-shrink: 0;
+    background: none;
+    color: transparent;
+  }
+  .habit-check.done { background: var(--accent2); border-color: var(--accent2); color: var(--bg); }
+  .habit-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .habit-streak { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--accent3); }
+  .habit-name.done-text { text-decoration: line-through; color: var(--muted); }
+
+  /* COLORS */
+  .c-purple { background: rgba(124,106,247,.15); color: #a99af8; }
+  .c-teal   { background: rgba(93,202,165,.12); color: #5DCAA5; }
+  .c-amber  { background: rgba(240,160,90,.12);  color: #f0a05a; }
+  .c-blue   { background: rgba(106,184,247,.12); color: #6ab8f7; }
+  .c-coral  { background: rgba(232,104,104,.12); color: #e86868; }
+  .c-green  { background: rgba(93,202,165,.1);  color: #5DCAA5; }
+  .c-pink   { background: rgba(212,83,126,.12); color: #e080a8; }
+
+  .link-text { color: var(--accent5); text-decoration: none; font-size: 12px; }
+  .link-text:hover { text-decoration: underline; }
+
+  /* SETTINGS */
+  .settings-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 13px; font-weight: 500; }
+  .settings-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .settings-input {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--r-sm);
+    padding: 7px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    width: 240px;
+    transition: border-color .15s;
+  }
+  .settings-input:focus { border-color: var(--accent); }
+  .save-btn {
+    padding: 7px 16px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--r-sm);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+    margin-top: 16px;
+  }
+  .save-btn:hover { opacity: .85; }
+
+  /* RESPONSIVE */
+  .menu-btn {
+    display: none;
+    background: none;
+    border: 1px solid var(--border2);
+    color: var(--text);
+    border-radius: var(--r-sm);
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  @media (max-width: 700px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .content { padding: 20px 16px; }
+    .topbar { padding: 14px 16px; }
+    .menu-btn { display: flex; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 90; }
+    .overlay.show { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-name">Student Hub</div>
+      <div class="logo-sub">AI Command Centre</div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" onclick="showPage('dashboard',this)">
+        <span class="nav-icon">◈</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('assistant',this)">
+        <span class="nav-icon">◎</span> AI Assistant
+      </button>
+      <button class="nav-item" onclick="showPage('fitness',this)">
+        <span class="nav-icon">◉</span> Fitness
+      </button>
+      <button class="nav-item" onclick="showPage('school',this)">
+        <span class="nav-icon">◈</span> School
+      </button>
+      <button class="nav-item" onclick="showPage('habits',this)">
+        <span class="nav-icon">◐</span> Habits
+      </button>
+      <button class="nav-item" onclick="showPage('settings',this)">
+        <span class="nav-icon">◌</span> Settings
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="api-badge">
+        <div class="api-dot" id="api-dot"></div>
+        <span id="api-status">No API key</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <div>
+          <div class="topbar-title" id="page-title">Dashboard</div>
+          <div class="topbar-date" id="top-date"></div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace" id="greeting"></div>
+    </div>
+
+    <!-- SETUP SCREEN -->
+    <div id="page-setup" style="display:none">
+      <div class="setup-screen">
+        <div class="setup-card">
+          <div class="setup-title">Welcome to Student Hub</div>
+          <div class="setup-sub">Add your Anthropic API key to unlock the AI assistant — workouts, study plans, calendar summaries, and email drafts, all in one place.</div>
+          <div class="form-field">
+            <label class="form-label">Anthropic API Key</label>
+            <input class="form-input" type="password" id="setup-key" placeholder="sk-ant-api03-..." />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Your name</label>
+            <input class="form-input" type="text" id="setup-name" placeholder="e.g. Alex" />
+          </div>
+          <button class="btn-primary" onclick="saveSetup()">Get started →</button>
+          <div class="setup-hint">
+            Get a free API key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+            Keys are stored locally on your device only.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="content" style="display:none">
+      <div class="metrics" id="dash-metrics">
+        <div class="metric">
+          <div class="metric-val up" id="d-water">0L</div>
+          <div class="metric-lbl">Water today</div>
+          <div class="metric-delta neu" id="d-water-d">Target: 2.5L</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val up" id="d-workouts">0</div>
+          <div class="metric-lbl">Workouts this week</div>
+          <div class="metric-delta neu">Goal: 5/week</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="d-tasks">0</div>
+          <div class="metric-lbl">Study tasks due</div>
+          <div class="metric-delta neu" id="d-tasks-d">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="d-streak">0</div>
+          <div class="metric-lbl">Habit streak</div>
+          <div class="metric-delta up">days</div>
+        </div>
+      </div>
+
+      <div class="section-head">Today's schedule</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px">
+        <div class="timeline" id="dash-timeline"></div>
+      </div>
+
+      <div class="section-head">Quick actions</div>
+      <div class="quick-prompts" id="dash-quick"></div>
+    </div>
+
+    <!-- AI ASSISTANT -->
+    <div id="page-assistant" class="content" style="display:none">
+      <div class="section-head">Quick prompts</div>
+      <div class="quick-prompts">
+        <span class="qp" onclick="fillPrompt('Give me a morning briefing for today — my schedule, top study priorities, and workout plan.')">Morning briefing</span>
+        <span class="qp" onclick="fillPrompt('Build me a workout plan for this week around my university schedule.')">Weekly workout plan</span>
+        <span class="qp" onclick="fillPrompt('I have an assignment due in 5 days. Help me break it into daily tasks.')">Break down project</span>
+        <span class="qp" onclick="fillPrompt('Draft a professional email to my professor asking for a 3-day extension.')">Email to professor</span>
+        <span class="qp" onclick="fillPrompt('Create a revision timetable for my upcoming exams. I have 3 subjects.')">Exam timetable</span>
+        <span class="qp" onclick="fillPrompt('Summarise these lecture notes and turn them into flashcards: ')">Process notes</span>
+        <span class="qp" onclick="fillPrompt('What should I eat today as a university student who trains 5 days a week, on a budget?')">Meal plan</span>
+        <span class="qp" onclick="fillPrompt('Review my day and give me an evening wind-down and prep plan for tomorrow.')">Evening review</span>
+      </div>
+
+      <div class="chat-panel">
+        <div class="chat-header">
+          <div class="chat-dot"></div>
+          <span>Claude — Student AI</span>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="msg claude">
+            <div class="msg-avatar">C</div>
+            <div class="msg-bubble" id="welcome-msg"></div>
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-textarea" id="chat-input" placeholder="Ask anything — workouts, essays, schedule, emails..." rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+          <button class="chat-send" id="chat-send-btn" onclick="sendMessage()">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FITNESS -->
+    <div id="page-fitness" class="content" style="display:none">
+      <div class="section-head">Water intake today</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px">
+        <div class="bar-row">
+          <span class="bar-label">Water</span>
+          <div class="bar-track"><div class="bar-fill" id="water-bar" style="width:0%;background:var(--accent5)"></div></div>
+          <span class="bar-val"><span id="water-display">0.0</span> / 2.5L</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="qp" onclick="addWater(0.25)">+ 250ml</button>
+          <button class="qp" onclick="addWater(0.5)">+ 500ml</button>
+          <button class="qp" onclick="addWater(0.75)">+ 750ml</button>
+          <button class="qp" onclick="resetWater()" style="color:var(--accent4)">Reset</button>
+        </div>
+      </div>
+
+      <div class="section-head">Weekly running log</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px" id="run-log">
+        <div id="run-entries"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
+          <input class="settings-input" type="number" id="run-km" placeholder="km" style="width:70px" min="0" step="0.1">
+          <input class="settings-input" type="number" id="run-min" placeholder="min" style="width:70px" min="0">
+          <button class="qp" onclick="logRun()">Log run</button>
+        </div>
+      </div>
+
+      <div class="section-head">AI workout planner</div>
+      <div class="card-grid">
+        <div class="card" onclick="askAI('Build me a 5-day workout split for a university student who also runs 3 times a week. Include sets and reps.')">
+          <span class="card-badge c-teal">Strength</span>
+          <div class="card-title">Weekly split</div>
+          <div class="card-desc">5-day plan tailored around your class schedule.</div>
+          <div class="card-cta up">Generate ↗</div>
+        </div>
+        <div class="card" onclick="askAI('Create a 4-week progressive running plan to improve my 5K time. I currently run 3x per week.')">
+          <span class="card-badge c-blue">Running</span>
+          <div class="card-title">5K training plan</div>
+          <div class="card-desc">4-week progressive plan to hit a new PB.</div>
+          <div class="card-cta up">Generate ↗</div>
+        </div>
+        <div class="card" onclick="askAI('What should I eat on heavy training days vs rest days as a university student? Budget-friendly meal ideas.')">
+          <span class="card-badge c-amber">Nutrition</span>
+          <div class="card-title">Training nutrition</div>
+          <div class="card-desc">Budget-friendly high-protein meal ideas.</div>
+          <div class="card-cta up">Get ideas ↗</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHOOL -->
+    <div id="page-school" class="content" style="display:none">
+      <div class="section-head">Tasks & deadlines</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px">
+        <div id="task-list"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
+          <input class="settings-input" type="text" id="task-name" placeholder="Task name" style="width:200px">
+          <input class="settings-input" type="date" id="task-due" style="width:150px">
+          <button class="qp" onclick="addTask()">Add task</button>
+        </div>
+      </div>
+
+      <div class="section-head">AI study tools</div>
+      <div class="card-grid">
+        <div class="card" onclick="askAI('Help me create a study schedule for exam revision. I have 3 subjects and 2 weeks until my first exam.')">
+          <span class="card-badge c-purple">Revision</span>
+          <div class="card-title">Exam timetable</div>
+          <div class="card-desc">Spaced-repetition schedule across all subjects.</div>
+          <div class="card-cta up">Build schedule ↗</div>
+        </div>
+        <div class="card" onclick="showPage('assistant',document.querySelector(\'.nav-item:nth-child(2)\'));fillPrompt('Break down this project into daily tasks: ')">
+          <span class="card-badge c-coral">Projects</span>
+          <div class="card-title">Project breakdown</div>
+          <div class="card-desc">Turn a brief into daily milestones.</div>
+          <div class="card-cta up">Break down ↗</div>
+        </div>
+        <div class="card" onclick="askAI('I need to write an essay. Help me create a strong argument structure and outline.')">
+          <span class="card-badge c-teal">Essays</span>
+          <div class="card-title">Essay coach</div>
+          <div class="card-desc">Structure, arguments, and feedback.</div>
+          <div class="card-cta up">Start essay ↗</div>
+        </div>
+        <div class="card" onclick="askAI('Turn these lecture notes into a concise summary and 10 flashcard questions: [paste notes here]')">
+          <span class="card-badge c-blue">Notes</span>
+          <div class="card-title">Note processor</div>
+          <div class="card-desc">Summaries and flashcards from your notes.</div>
+          <div class="card-cta up">Process ↗</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HABITS -->
+    <div id="page-habits" class="content" style="display:none">
+      <div class="section-head">Today's habits</div>
+      <div class="habit-grid" id="habit-list"></div>
+      <div style="margin-top:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="settings-input" type="text" id="new-habit" placeholder="New habit name" style="width:200px">
+        <button class="qp" onclick="addHabit()">Add habit</button>
+      </div>
+
+      <div class="section-head" style="margin-top:28px">This week</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px">
+        <div id="weekly-habit-view"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="page-settings" class="content" style="display:none">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px">
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Anthropic API key</div>
+            <div class="settings-sub">Stored locally — never sent anywhere except Anthropic</div>
+          </div>
+          <input class="settings-input" type="password" id="set-apikey" placeholder="sk-ant-api03-...">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Your name</div>
+            <div class="settings-sub">Used in the AI greeting</div>
+          </div>
+          <input class="settings-input" type="text" id="set-name" placeholder="Your name">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Daily water goal</div>
+            <div class="settings-sub">Litres per day</div>
+          </div>
+          <input class="settings-input" type="number" id="set-water" placeholder="2.5" step="0.1" style="width:100px">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Weekly workout goal</div>
+            <div class="settings-sub">Sessions per week</div>
+          </div>
+          <input class="settings-input" type="number" id="set-workouts" placeholder="5" style="width:100px">
+        </div>
+        <button class="save-btn" onclick="saveSettings()">Save settings</button>
+      </div>
+
+      <div class="section-head" style="margin-top:24px">Data</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px">
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Clear all data</div>
+            <div class="settings-sub">Removes all local data including API key</div>
+          </div>
+          <button class="qp" onclick="clearAll()" style="color:var(--accent4);border-color:var(--accent4)">Clear data</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function ls(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
+function lss(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+let state = {
+  apiKey: ls('sh_apikey') || '',
+  name: ls('sh_name') || '',
+  waterGoal: ls('sh_watergoal') || 2.5,
+  workoutGoal: ls('sh_wgoal') || 5,
+  waterToday: ls('sh_water_'+today()) || 0,
+  runs: ls('sh_runs') || [],
+  tasks: ls('sh_tasks') || [],
+  habits: ls('sh_habits') || ['Morning workout','Daily run','2.5L water','Study 2h','Lecture notes'],
+  habitLog: ls('sh_habitlog') || {},
+  chatHistory: [],
+};
+
+function today(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+
+function init(){
+  const d = new Date();
+  document.getElementById('top-date').textContent = DAYS[d.getDay()]+', '+MONTHS[d.getMonth()]+' '+d.getDate()+' '+d.getFullYear();
+  const h = d.getHours();
+  const greet = h<12?'Good morning':'h<17?'+'Good afternoon':'Good evening';
+  document.getElementById('greeting').textContent = state.name ? greet+', '+state.name : greet;
+  updateApiStatus();
+  if(!state.apiKey){ showRaw('setup'); return; }
+  showPage('dashboard', document.querySelector('.nav-item'));
+  renderAll();
+}
+
+function updateApiStatus(){
+  const dot = document.getElementById('api-dot');
+  const lbl = document.getElementById('api-status');
+  if(state.apiKey){ dot.classList.add('ok'); lbl.textContent = 'Claude connected'; }
+  else { dot.classList.remove('ok'); lbl.textContent = 'No API key'; }
+}
+
+function showRaw(id){
+  document.querySelectorAll('[id^="page-"]').forEach(p=>p.style.display='none');
+  document.getElementById('page-'+id).style.display='block';
+}
+function showPage(id, btn){
+  showRaw(id);
+  if(btn){ document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); btn.classList.add('active'); }
+  const titles = {dashboard:'Dashboard',assistant:'AI Assistant',fitness:'Fitness',school:'School',habits:'Habits',settings:'Settings'};
+  document.getElementById('page-title').textContent = titles[id]||id;
+  closeSidebar();
+  if(id==='dashboard') renderDashboard();
+  if(id==='fitness') renderFitness();
+  if(id==='school') renderTasks();
+  if(id==='habits') renderHabits();
+  if(id==='settings') loadSettings();
+  if(id==='assistant') renderWelcome();
+}
+
+function renderAll(){ renderDashboard(); renderFitness(); renderTasks(); renderHabits(); }
+
+function renderDashboard(){
+  document.getElementById('d-water').textContent = state.waterToday.toFixed(1)+'L';
+  const pct = Math.min(100, Math.round(state.waterToday/state.waterGoal*100));
+  document.getElementById('d-water-d').textContent = pct+'% of '+state.waterGoal+'L goal';
+  const ww = todayWorkouts();
+  document.getElementById('d-workouts').textContent = ww;
+  const tasks = state.tasks.filter(t=>!t.done).sort((a,b)=>new Date(a.due)-new Date(b.due));
+  document.getElementById('d-tasks').textContent = tasks.length;
+  document.getElementById('d-tasks-d').textContent = tasks[0]?'Next: '+tasks[0].name.slice(0,18):'All clear';
+  document.getElementById('d-streak').textContent = calcStreak();
+  renderTimeline();
+  renderQuickPrompts();
+}
+
+function todayWorkouts(){
+  const td = today();
+  const log = state.habitLog[td]||{};
+  return log['Morning workout']?1:0;
+}
+function calcStreak(){
+  let s=0,d=new Date();
+  for(let i=0;i<60;i++){
+    const k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+    const log=state.habitLog[k]||{};
+    const done=state.habits.filter(h=>log[h]).length;
+    if(done>=Math.ceil(state.habits.length*0.6)) s++;
+    else if(i>0) break;
+    d.setDate(d.getDate()-1);
+  }
+  return s;
+}
+
+function renderTimeline(){
+  const tl = document.getElementById('dash-timeline');
+  const now = new Date();
+  const slots = [
+    {time:'6:30 AM',name:'Hydration start',sub:'First glass of water',status:'done'},
+    {time:'7:00 AM',name:'Morning workout',sub:'Gym or run block',status:'done'},
+    {time:'9:00 AM',name:'First lecture',sub:'Check your calendar',status: now.getHours()>=9?'done':'soon'},
+    {time:'12:00 PM',name:'Lunch + study block',sub:'Use this window for deep work',status: now.getHours()>=12?'done':now.getHours()>=11?'now':'soon'},
+    {time:'3:00 PM',name:'Afternoon lecture/seminar',sub:'',status:'soon'},
+    {time:'5:00 PM',name:'Free block',sub:'Ideal for essay or project work',status:'soon'},
+    {time:'8:00 PM',name:'Evening review',sub:'Log habits, prep tomorrow',status:'soon'},
+  ];
+  tl.innerHTML = slots.map(s=>`
+    <div class="tl-item">
+      <div class="tl-dot ${s.status}"></div>
+      <div class="tl-time">${s.time}</div>
+      <div class="tl-name">${s.name}</div>
+      ${s.sub?'<div class="tl-sub">'+s.sub+'</div>':''}
+    </div>`).join('');
+}
+
+function renderQuickPrompts(){
+  const q = document.getElementById('dash-quick');
+  const prompts = [
+    ['Morning briefing','Give me a full morning briefing for today — schedule overview, top study priority, and my workout.'],
+    ['Water check','How much water should I have had by now? Give me a reminder schedule for the rest of the day.'],
+    ['Study focus','What should I focus on studying today? Give me a 2-hour deep work session plan.'],
+    ['Evening wind-down','Plan my evening — wind down, prep for tomorrow, and review what I achieved today.'],
+  ];
+  q.innerHTML = prompts.map(([l,p])=>`<span class="qp" onclick="askAI('${p.replace(/'/g,"\\'")}')"> ${l}</span>`).join('');
+}
+
+function renderFitness(){
+  const pct = Math.min(100, state.waterToday/state.waterGoal*100);
+  const bar = document.getElementById('water-bar');
+  if(bar){ bar.style.width = pct+'%'; setTimeout(()=>bar.style.width=pct+'%',50); }
+  const wd = document.getElementById('water-display');
+  if(wd) wd.textContent = state.waterToday.toFixed(1);
+  renderRuns();
+}
+
+function addWater(amt){
+  state.waterToday = Math.min(state.waterGoal+1, state.waterToday+amt);
+  lss('sh_water_'+today(), state.waterToday);
+  renderFitness();
+  renderDashboard();
+}
+function resetWater(){ state.waterToday=0; lss('sh_water_'+today(),0); renderFitness(); renderDashboard(); }
+
+function logRun(){
+  const km = parseFloat(document.getElementById('run-km').value);
+  const min = parseInt(document.getElementById('run-min').value);
+  if(!km) return;
+  state.runs.unshift({date:today(),km,min:min||null});
+  if(state.runs.length>20) state.runs.pop();
+  lss('sh_runs',state.runs);
+  document.getElementById('run-km').value='';
+  document.getElementById('run-min').value='';
+  renderRuns();
+}
+function renderRuns(){
+  const el = document.getElementById('run-entries');
+  if(!el) return;
+  if(!state.runs.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted)">No runs logged yet.</div>'; return; }
+  const recent = state.runs.slice(0,5);
+  el.innerHTML = recent.map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--muted)">${r.date}</span>
+      <span style="font-size:13px;font-weight:500">${r.km} km</span>
+      <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">${r.min?r.min+'min':''}</span>
+    </div>`).join('');
+}
+
+function renderTasks(){
+  const el = document.getElementById('task-list');
+  if(!el) return;
+  if(!state.tasks.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:8px">No tasks yet.</div>'; return; }
+  const sorted = [...state.tasks].sort((a,b)=>new Date(a.due)-new Date(b.due));
+  el.innerHTML = sorted.map((t,i)=>{
+    const days = t.due ? Math.ceil((new Date(t.due)-new Date())/86400000) : null;
+    const urgency = days!==null&&days<=2?'var(--accent4)':days<=5?'var(--accent3)':'var(--muted)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <button onclick="toggleTask(${i})" style="width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border2);background:${t.done?'var(--accent2)':'none'};color:${t.done?'var(--bg)':'transparent'};cursor:pointer;font-size:10px;flex-shrink:0">✓</button>
+      <span style="flex:1;font-size:13px;${t.done?'text-decoration:line-through;color:var(--muted)':''}">${t.name}</span>
+      ${t.due?`<span style="font-size:11px;font-family:'DM Mono',monospace;color:${urgency}">${days===0?'Today':days<0?'Overdue':days+'d'}</span>`:''}
+      <button onclick="removeTask(${i})" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:14px">×</button>
+    </div>`;}).join('');
+}
+function addTask(){
+  const name = document.getElementById('task-name').value.trim();
+  const due = document.getElementById('task-due').value;
+  if(!name) return;
+  state.tasks.push({name,due,done:false});
+  lss('sh_tasks',state.tasks);
+  document.getElementById('task-name').value='';
+  document.getElementById('task-due').value='';
+  renderTasks();
+  renderDashboard();
+}
+function toggleTask(i){ state.tasks[i].done=!state.tasks[i].done; lss('sh_tasks',state.tasks); renderTasks(); renderDashboard(); }
+function removeTask(i){ state.tasks.splice(i,1); lss('sh_tasks',state.tasks); renderTasks(); renderDashboard(); }
+
+function renderHabits(){
+  const el = document.getElementById('habit-list');
+  if(!el) return;
+  const td = today();
+  const log = state.habitLog[td]||{};
+  el.innerHTML = state.habits.map((h,i)=>`
+    <div class="habit-row">
+      <button class="habit-check ${log[h]?'done':''}" onclick="toggleHabit('${h}')">${log[h]?'✓':''}</button>
+      <span class="habit-name ${log[h]?'done-text':''}">${h}</span>
+      <span class="habit-streak">${habitStreak(h)}d</span>
+      <button onclick="removeHabit(${i})" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:14px">×</button>
+    </div>`).join('');
+  renderWeeklyHabits();
+}
+function toggleHabit(h){
+  const td=today();
+  if(!state.habitLog[td]) state.habitLog[td]={};
+  state.habitLog[td][h]=!state.habitLog[td][h];
+  lss('sh_habitlog',state.habitLog);
+  renderHabits();
+  renderDashboard();
+}
+function addHabit(){
+  const v=document.getElementById('new-habit').value.trim();
+  if(!v||state.habits.includes(v)) return;
+  state.habits.push(v);
+  lss('sh_habits',state.habits);
+  document.getElementById('new-habit').value='';
+  renderHabits();
+}
+function removeHabit(i){ state.habits.splice(i,1); lss('sh_habits',state.habits); renderHabits(); }
+function habitStreak(h){
+  let s=0,d=new Date();
+  for(let i=0;i<60;i++){
+    const k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+    if(state.habitLog[k]&&state.habitLog[k][h]) s++;
+    else if(i>0) break;
+    d.setDate(d.getDate()-1);
+  }
+  return s;
+}
+function renderWeeklyHabits(){
+  const el=document.getElementById('weekly-habit-view');
+  if(!el) return;
+  const days=[];
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push({label:DAYS[d.getDay()],key:d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}); }
+  el.innerHTML=`<div style="display:flex;gap:6px;margin-bottom:10px">${days.map(d=>`<div style="flex:1;text-align:center;font-size:11px;color:var(--muted)">${d.label}</div>`).join('')}</div>`+
+  state.habits.map(h=>`<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
+    ${days.map(d=>{const done=state.habitLog[d.key]&&state.habitLog[d.key][h];return`<div style="flex:1;height:28px;border-radius:5px;background:${done?'var(--accent2)':'var(--bg4)'};border:1px solid var(--border)"></div>`;}).join('')}
+    </div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">${h}</div>`).join('');
+}
+
+function renderWelcome(){
+  const el=document.getElementById('welcome-msg');
+  if(el) el.textContent = `Hey${state.name?' '+state.name:''}! I'm your Student AI — ask me anything about workouts, study plans, essay help, or your schedule. What do you need today?`;
+}
+
+function loadSettings(){
+  document.getElementById('set-apikey').value = state.apiKey;
+  document.getElementById('set-name').value = state.name;
+  document.getElementById('set-water').value = state.waterGoal;
+  document.getElementById('set-workouts').value = state.workoutGoal;
+}
+function saveSettings(){
+  state.apiKey = document.getElementById('set-apikey').value.trim();
+  state.name = document.getElementById('set-name').value.trim();
+  state.waterGoal = parseFloat(document.getElementById('set-water').value)||2.5;
+  state.workoutGoal = parseInt(document.getElementById('set-workouts').value)||5;
+  lss('sh_apikey',state.apiKey);
+  lss('sh_name',state.name);
+  lss('sh_watergoal',state.waterGoal);
+  lss('sh_wgoal',state.workoutGoal);
+  updateApiStatus();
+  renderDashboard();
+  alert('Settings saved!');
+}
+function saveSetup(){
+  state.apiKey = document.getElementById('setup-key').value.trim();
+  state.name = document.getElementById('setup-name').value.trim();
+  lss('sh_apikey',state.apiKey);
+  lss('sh_name',state.name);
+  if(!state.apiKey){ alert('Please enter your API key.'); return; }
+  updateApiStatus();
+  showPage('dashboard',document.querySelector('.nav-item'));
+  renderAll();
+}
+function clearAll(){ if(confirm('Clear all data?')){ localStorage.clear(); location.reload(); } }
+
+function fillPrompt(t){ document.getElementById('chat-input').value=t; document.getElementById('chat-input').focus(); showPage('assistant',document.querySelectorAll('.nav-item')[1]); }
+function askAI(p){ fillPrompt(p); setTimeout(()=>sendMessage(),100); }
+
+async function sendMessage(){
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if(!msg) return;
+  if(!state.apiKey){ alert('Add your API key in Settings first.'); return; }
+  input.value='';
+  input.style.height='auto';
+  addMsg('user',msg);
+  state.chatHistory.push({role:'user',content:msg});
+  const btn = document.getElementById('chat-send-btn');
+  btn.disabled=true;
+  const typingId = addTyping();
+  try {
+    const sysPrompt = `You are a personal AI assistant for a university student named ${state.name||'a student'}. They work out 5 days a week, run regularly, track water intake (goal: ${state.waterGoal}L/day), and juggle lectures, assignments, and projects. Be concise, practical, and motivating. Format responses clearly — use short paragraphs or bullet points. Today is ${new Date().toDateString()}.`;
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':state.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sysPrompt,messages:state.chatHistory.slice(-12)})
+    });
+    removeTyping(typingId);
+    if(!res.ok){ const e=await res.json(); addMsg('claude','Error: '+(e.error?.message||res.status)); btn.disabled=false; return; }
+    const data = await res.json();
+    const reply = data.content?.[0]?.text||'No response';
+    addMsg('claude',reply);
+    state.chatHistory.push({role:'assistant',content:reply});
+  } catch(e){ removeTyping(typingId); addMsg('claude','Network error. Check your API key and connection.'); }
+  btn.disabled=false;
+}
+
+function addMsg(role,text){
+  const c=document.getElementById('chat-messages');
+  const d=document.createElement('div');
+  d.className='msg '+role;
+  d.innerHTML=`<div class="msg-avatar">${role==='claude'?'C':'U'}</div><div class="msg-bubble">${escHtml(text)}</div>`;
+  c.appendChild(d);
+  c.scrollTop=c.scrollHeight;
+  return d.id='m'+Date.now();
+}
+function addTyping(){
+  const c=document.getElementById('chat-messages');
+  const d=document.createElement('div');
+  const id='t'+Date.now();
+  d.id=id; d.className='msg claude';
+  d.innerHTML='<div class="msg-avatar">C</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+  c.appendChild(d);
+  c.scrollTop=c.scrollHeight;
+  return id;
+}
+function removeTyping(id){ const el=document.getElementById(id); if(el) el.remove(); }
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
+
+init();
+</script>
+</body>
+</html>
